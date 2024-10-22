@@ -3,13 +3,14 @@ from base64 import b32encode
 
 import cryptography.fernet as crypt
 import pyotp as otp
+
 import qrcode as qr
-
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from encryption import encrypt_message_gcm, decrypt_message_gcm
-
+from cryptography.hazmat.backends import default_backend
 salt = os.urandom(16)
 
-def hash_token(password: str) -> (bytes, bytes):
+def scrypt_message(password: str) -> (bytes, bytes):
     # Generate a random salt
     # Create a Scrypt KDF instance
     kdf = Scrypt(
@@ -28,6 +29,7 @@ class Client:
     def __init__(self):
         self.session_key = None
         self.session_iv = None
+        self.password = "Senha mucho louca"
         with open("secret-totp-client.enc", "r") as fd:
             encrypted_secret = fd.read()
             with open('secret-client.key', 'r') as key_file:
@@ -38,8 +40,8 @@ class Client:
                 self.secret = b32encode(decrypted_data)
     
     def set_seesion_encryption_parameters(self, token):
-        self.session_key = hash_token(token)
-        self.session_iv = None # Definir como será usado
+        self.session_key = scrypt_message(token)
+        self.session_iv = scrypt_message(self.password)
 
     def request_totp(self):
         totp = otp.TOTP(self.secret, interval=60)
@@ -54,6 +56,7 @@ class Client:
 class Server:
     def __init__(self):
         self.session_key = None
+        self.session_nonce = None
         with open("secret-totp-server.enc", "r") as fd:
             encrypted_secret = fd.read()
             with open('secret-server.key', 'r') as key_file:
@@ -74,11 +77,14 @@ class Server:
     def is_user_totp_valid(self):
         user_input = input("Insira o código 2FA: ")
         if self.request_totp().verify(user_input):
-            self.__set_session_key(user_input)
+            self.__set_session_key(scrypt_message(user_input))
+            self.gen_nonce()
             print("Sessão validada")
             return True, user_input
         return False, None
-        
+
+    def gen_nonce(self, user_password="Senha mucho louca"): 
+       self.session_nonce = scrypt_message(user_password)
 
 def main():
     sv = Server()
@@ -91,12 +97,16 @@ def main():
     is_session_valid, key = sv.is_user_totp_valid()
 
     if is_session_valid:
-        cl.set_seesion_key(key)
+        cl.set_seesion_encryption_parameters(key)
     else:
         print("Sessão inválida")
         return
 
     print("Tela do cliente")
+    crypted_message, tag = encrypt_message_gcm("Mensagem secreta", cl.session_key, cl.session_iv)
 
+    decrypted_message = decrypt_message_gcm(crypted_message, sv.session_key, sv.session_nonce, tag)
+
+    print(decrypted_message)
 
 main()

@@ -4,12 +4,12 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
-def encrypt_message_gcm(message):
+def encrypt_message_gcm(message, key, nonce):
     # Generate a random 12-byte (96-bit) nonce
 
     # Create AES-GCM cipher
     cipher = Cipher(
-        algorithms.AES(self.session_key),
+        algorithms.AES(key),
         modes.GCM(nonce),
         backend=default_backend()
     )
@@ -22,12 +22,12 @@ def encrypt_message_gcm(message):
     # Get the GCM tag
     tag = encryptor.tag
 
-    return (ciphertext, nonce, tag)
+    return ciphertext, tag
 
-def decrypt_message_gcm(ciphertext, nonce, tag, key):
+def decrypt_message_gcm(ciphertext, key, nonce, tag):
     # Create AES-GCM cipher
     cipher = Cipher(
-        algorithms.AES(self.session_key),
+        algorithms.AES(key),
         modes.GCM(nonce, tag),
         backend=default_backend()
     )
