@@ -39,6 +39,10 @@ class Client:
                 decrypted_data = cipher.decrypt(encrypted_secret)
                 self.secret = b32encode(decrypted_data)
     
+    def screen(self):
+        print("\n"*3)
+        print("-"*10,"Tela do cliente", "-"*10)
+
     def set_seesion_encryption_parameters(self, token):
         self.session_key = scrypt_message(token)
         self.session_iv = scrypt_message(self.password)
@@ -50,6 +54,12 @@ class Client:
         # codigo_qr.show()
 
         return totp
+
+    def encrypt_message(self, message):
+        return encrypt_message_gcm(message, self.session_key, self.session_iv)
+
+    def decrypt_message(self, message, tag):
+        return decrypt_message_gcm(message, self.session_key, self.session_iv, tag)
 
 
 
@@ -66,6 +76,10 @@ class Server:
                 # O algoritmo do TOTP precisava de base32 encoding
                 decrypted_data = cipher.decrypt(encrypted_secret)
                 self.secret = b32encode(decrypted_data)
+    
+    def screen(self,):
+        print("\n"*3)
+        print("-"*10,"Tela do Servidor", "-"*10)
 
     def request_totp(self):
         totp = otp.TOTP(self.secret, interval=60)
@@ -86,14 +100,20 @@ class Server:
     def gen_nonce(self, user_password="Senha mucho louca"): 
        self.session_nonce = scrypt_message(user_password)
 
+    def encrypt_message(self, message):
+        return encrypt_message_gcm(message, self.session_key, self.session_iv)
+
+    def decrypt_message(self, message, tag):
+        return decrypt_message_gcm(message, self.session_key, self.session_iv, tag)
+
 def main():
     sv = Server()
     cl = Client()
 
-    print("Tela do cliente")
+    cl.screen()
     print("TOTP no celular do usuário: ", cl.request_totp().now())
 
-    print("Tela do servidor")
+    sv.screen()
     is_session_valid, key = sv.is_user_totp_valid()
 
     if is_session_valid:
@@ -102,7 +122,7 @@ def main():
         print("Sessão inválida")
         return
 
-    print("Tela do cliente")
+    cl.screen()
     crypted_message, tag = encrypt_message_gcm("Mensagem secreta", cl.session_key, cl.session_iv)
 
     decrypted_message = decrypt_message_gcm(crypted_message, sv.session_key, sv.session_nonce, tag)
