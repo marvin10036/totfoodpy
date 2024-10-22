@@ -1,13 +1,14 @@
+import os
+from base64 import b32encode
+
+import cryptography.fernet as crypt
 import pyotp as otp
 import qrcode as qr
-import cryptography.fernet as crypt
-from base64 import b32encode
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
-from cryptography.hazmat.backends import default_backend
-import os
+
+from encryption import encrypt_message_gcm, decrypt_message_gcm
 
 salt = os.urandom(16)
+
 def hash_token(password: str) -> (bytes, bytes):
     # Generate a random salt
     # Create a Scrypt KDF instance
@@ -26,6 +27,7 @@ def hash_token(password: str) -> (bytes, bytes):
 class Client:
     def __init__(self):
         self.session_key = None
+        self.session_iv = None
         with open("secret-totp-client.enc", "r") as fd:
             encrypted_secret = fd.read()
             with open('secret-client.key', 'r') as key_file:
@@ -35,9 +37,9 @@ class Client:
                 decrypted_data = cipher.decrypt(encrypted_secret)
                 self.secret = b32encode(decrypted_data)
     
-    def set_seesion_key(self, token):
+    def set_seesion_encryption_parameters(self, token):
         self.session_key = hash_token(token)
-        print(self.session_key)
+        self.session_iv = None # Definir como será usado
 
     def request_totp(self):
         totp = otp.TOTP(self.secret, interval=60)
@@ -46,12 +48,6 @@ class Client:
         # codigo_qr.show()
 
         return totp
-    
-    def __ecrypt_message(self, message):
-        pass
-
-    def __decrypt_message(self, message):
-        pass
 
 
 
