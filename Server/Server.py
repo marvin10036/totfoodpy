@@ -30,11 +30,11 @@ class Server:
     def show_dishes(self):
         print("Escolha um prato: ")
 
-        print("1 - Arroz e Feijão - R$ 25,00",
-              "2 - Pizza Calabresa - R$ 30,00",
-              "3 - Nhoque - R$ 40,00",
-              "4 - Salada - R$ 20,00",
-              "5 - Linguiça - R$ 20,00")
+        print(" 1 - Arroz e Feijão - R$ 25,00\n",
+              "2 - Pizza Calabresa - R$ 30,00\n",
+              "3 - Nhoque - R$ 40,00\n",
+              "4 - Salada - R$ 20,00\n",
+              "5 - Linguiça - R$ 20,00\n")
 
     def ask_user_phone(self):
         user_phone = input("Qual seu número de telefone: ")
