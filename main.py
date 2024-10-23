@@ -1,13 +1,11 @@
-import os
 
 from Server.Server import Server
 from Client.Client import Client
 
 
 def main():
-    salt = os.urandom(16)
-    sv = Server(salt)
-    cl = Client(salt)
+    sv = Server()
+    cl = Client()
 
     sv.screen()
     sv.show_dishes()

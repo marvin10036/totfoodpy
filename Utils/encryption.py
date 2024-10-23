@@ -7,7 +7,7 @@ from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
 def encrypt_message_gcm(message, key, nonce):
 
-    # Create AES-GCM cipher
+    # Cria cifra GCM/AES
     cipher = Cipher(
         algorithms.AES(key),
         modes.GCM(nonce),
@@ -16,25 +16,23 @@ def encrypt_message_gcm(message, key, nonce):
 
     encryptor = cipher.encryptor()
 
-    # Encrypt the message
+    # Encripta a mensagem
     ciphertext = encryptor.update(message.encode()) + encryptor.finalize()
 
-    # Get the GCM tag
+    # Pega a tag/aka hash de confirmação
     tag = encryptor.tag
 
     return ciphertext, tag
 
 def decrypt_message_gcm(ciphertext, key, nonce, tag):
-    # Create AES-GCM cipher
     cipher = Cipher(
         algorithms.AES(key),
         modes.GCM(nonce, tag),
         backend=default_backend()
     )
-    
+
     decryptor = cipher.decryptor()
 
-    # Decrypt the ciphertext
     decrypted_message = decryptor.update(ciphertext) + decryptor.finalize()
 
     return decrypted_message.decode()

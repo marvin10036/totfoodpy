@@ -8,10 +8,11 @@ from Utils.Utils import scrypt_message
 
 
 class Client:
-    def __init__(self, shared_salt):
-        self.salt = shared_salt
+    def __init__(self):
+        self.salt = self.get_salt()
         self.session_key = None
         self.session_iv = None
+
         with open("Client/secret-totp-client.enc", "r") as fd:
             encrypted_secret = fd.read()
             with open('Client/secret-client.key', 'r') as key_file:
@@ -23,7 +24,7 @@ class Client:
 
     def screen(self):
         print("\n"*3)
-        print("-"*10,"Tela do cliente", "-"*10)
+        print("-"*10, "Tela do cliente", "-"*10)
 
     def choose_dish(self):
         input("Escreva o número do prato: ")
@@ -40,10 +41,14 @@ class Client:
 
         return totp
 
+    def get_salt(self):
+        with open("Client/Stored-salt", "rb") as fd:
+            salt = fd.read()
+        return salt
+
     def encrypt_message(self, message):
         return encrypt_message_gcm(message, self.session_key, self.session_iv)
 
     def decrypt_message(self, message, tag):
         return decrypt_message_gcm(message, self.session_key, self.session_iv, tag)
-
 

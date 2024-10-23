@@ -8,10 +8,11 @@ from Utils.Utils import scrypt_message
 
 
 class Server:
-    def __init__(self, shared_salt):
-        self.salt = shared_salt
+    def __init__(self):
+        self.salt = self.get_salt()
         self.session_key = None
         self.session_iv = None
+
         with open("Server/secret-totp-server.enc", "r") as fd:
             encrypted_secret = fd.read()
             with open('Server/secret-server.key', 'r') as key_file:
@@ -24,21 +25,16 @@ class Server:
 
     def screen(self,):
         print("\n"*3)
-        print("-"*10,"Tela do Servidor", "-"*10)
+        print("-"*10, "Tela do Servidor", "-"*10)
 
     def show_dishes(self):
         print("Escolha um prato: ")
 
-        dishes = {
-            1: "1 - Arroz e Feijão - R$ 25,00",
-            2: "2 - Pizza Calabresa - R$ 30,00",
-            3: "3 - Nhoque - R$ 40,00",
-            4: "4 - Salada - R$ 20,00",
-            5: "5 - Linguiça - R$ 20,00"
-        }
-
-        for i in dishes.values():
-            print(i)
+        print("1 - Arroz e Feijão - R$ 25,00",
+              "2 - Pizza Calabresa - R$ 30,00",
+              "3 - Nhoque - R$ 40,00",
+              "4 - Salada - R$ 20,00",
+              "5 - Linguiça - R$ 20,00")
 
     def ask_user_phone(self):
         user_phone = input("Qual seu número de telefone: ")
@@ -60,6 +56,12 @@ class Server:
             return True, user_input
         return False, None
 
+    def get_salt(self):
+        with open("Server/Stored-salt", "rb") as fd:
+            salt = fd.read()
+        return salt
+
+    # Gera o IV a partir de chave derivada do telefone do usuario
     def gen_iv(self, user_phone):
         self.session_iv = scrypt_message(user_phone, self.salt)
 
